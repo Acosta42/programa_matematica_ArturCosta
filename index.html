@@ -2,359 +2,164 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Conversão de Bases</title>
+    <title>Conversor de Bases - Relatório de Formação</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f0f0; padding: 20px; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
-        .print-header { display: none; text-align: center; padding: 15px; border-bottom: 2px solid #333; margin-bottom: 20px; }
-        .print-footer { display: none; text-align: center; padding: 10px; border-top: 1px solid #ccc; margin-top: 20px; font-size: 11px; color: #666; }
+        .card-input { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; }
+        input, select { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
         
-        @media print {
-            .no-print { display: none !important; }
-            .print-header { display: block !important; }
-            .print-footer { display: block !important; position: fixed; bottom: 0; width: 100%; }
-            .resultado-bloco { break-inside: avoid; page-break-inside: avoid; }
+        /* Estilos da Grelha de Divisões */
+        .tabela-mestra { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        .bloco-td { width: 33.33%; padding: 15px; vertical-align: top; border: 1px solid #f0f0f0; }
+        
+        /* O Desenho da Divisão */
+        .tab-divisao { border-collapse: collapse; margin: 0 auto; }
+        .dividendo { font-size: 1.6rem; font-weight: bold; padding: 5px 15px; text-align: center; }
+        .divisor-cantoneira { 
+            border-left: 3px solid black; 
+            border-bottom: 3px solid black; 
+            font-size: 1.6rem; 
+            font-weight: bold; 
+            padding: 5px 20px; 
+            text-align: center;
         }
+        .resto-vermelho { font-size: 1.6rem; color: #e74c3c; font-weight: bold; text-align: center; padding-top: 5px; }
+        .quociente-azul { font-size: 1.4rem; color: #2980b9; font-weight: bold; text-align: center; padding-top: 5px; }
 
-        h1 { text-align: center; color: #333; margin-bottom: 25px; }
-        .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-        .card h2 { color: #2c3e50; margin-bottom: 15px; border-left: 4px solid #3498db; padding-left: 12px; font-size: 1.2em; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
-        .row { display: flex; gap: 15px; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 180px; }
-        button { background: #2c3e50; color: white; border: none; padding: 8px 16px; font-size: 14px; border-radius: 5px; cursor: pointer; transition: 0.3s; margin: 3px; }
-        button:hover { background: #3498db; }
-        .btn-success { background: #27ae60; }
-        .btn-info { background: #1abc9c; }
-        .btn-danger { background: #e74c3c; }
-        .btn-warning { background: #f39c12; }
+        .relatorio-final { background: white; padding: 40px; border-radius: 10px; min-height: 600px; }
+        .leitura-viva { background: #eef9f1; border-left: 5px solid #27ae60; padding: 15px; margin: 20px 0; font-family: monospace; font-size: 1.1rem; }
+        .badge-resultado { background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; border-radius: 8px; }
 
-        /* Estilos para visualização normal (navegador) */
-        .resultado-bloco { border: 1px solid #ddd; padding: 20px; margin-bottom: 25px; border-radius: 10px; background: #fefefe; }
-        .resultado-bloco h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-bottom: 20px; font-size: 1.2em; }
-        .tabela-divisao { width: 100%; margin: 15px 0; border-collapse: collapse; font-family: 'Courier New', monospace; font-size: 14px; }
-        .tabela-divisao th { background: #3498db; color: white; padding: 8px; text-align: center; border: 1px solid #ddd; }
-        .tabela-divisao td { padding: 6px 10px; text-align: center; border: 1px solid #ddd; }
-        .resto-col { color: #e74c3c; font-weight: bold; background: #fdecea; }
-        .quociente-col { color: #2980b9; font-weight: bold; }
-        .apoio-titulo { font-size: 14px; color: #d35400; margin: 15px 0 10px 0; font-weight: bold; }
-        .apoio-container { display: flex; flex-wrap: wrap; gap: 15px; margin: 10px 0; }
-        .passo-apoio { flex: 1; min-width: 180px; background: #fdfaf4; border: 1px solid #e0d5c1; border-radius: 8px; padding: 12px; }
-        .passo-apoio .passo-numero { font-size: 11px; color: #888; margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
-        .passo-apoio .conta { font-family: 'Courier New', monospace; font-size: 13px; margin: 8px 0; }
-        .divisao-conta { font-weight: bold; color: #2c3e50; }
-        .multiplicacao-conta { color: #d35400; }
-        .subtracao-conta { color: #e74c3c; font-weight: bold; }
-        .leitura-box { background: #e8f8e8; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; font-family: 'Courier New', monospace; font-size: 13px; border-left: 4px solid #27ae60; }
-        .resultado-final-box { background: #e8f4fd; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-top: 15px; font-size: 15px; border: 1px solid #3498db; }
-        .pedido-item { background: #f9f9f9; padding: 12px; margin-bottom: 12px; border-radius: 6px; border-left: 3px solid #3498db; }
-        .btn-remover { background: #e74c3c; padding: 4px 12px; font-size: 12px; }
-        .total-pedidos { background: #ecf0f1; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 15px; font-weight: bold; }
-        .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
-        .quantidade-config { background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-
-        @media (max-width: 700px) { .passo-apoio { min-width: calc(50% - 15px); } }
-        @media (max-width: 480px) { .passo-apoio { min-width: 100%; } }
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
+        .btn-calc { background: #27ae60; width: 100%; margin-bottom: 10px; }
+        .btn-word { background: #2b5797; }
+        .btn-pdf { background: #e67e22; }
+        
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📚 Sistema de Conversão de Bases</h1>
 
-        <div class="print-header" id="printHeader">
-            <h2>📊 RELATÓRIO DE CONVERSÃO DE BASES</h2>
-            <p id="headerNome"></p>
-            <p>Data: <span id="dataAtual"></span></p>
-            <hr>
+<div class="container">
+    <div class="card-input no-print">
+        <h2 style="margin-bottom:15px">Configuração do Exercício</h2>
+        <div class="row">
+            <input type="text" id="formando" placeholder="Nome do Formando">
+            <input type="number" id="numero" placeholder="Valor Decimal">
+            <select id="base">
+                <option value="2">Binário (2)</option>
+                <option value="8">Octal (8)</option>
+                <option value="16">Hexadecimal (16)</option>
+            </select>
         </div>
-
-        <div class="card no-print">
-            <h2>📝 Identificação</h2>
-            <div class="row">
-                <div class="col"><div class="form-group"><label>👤 Nome do Formando:</label><input type="text" id="nomeAluno" placeholder="Nome completo"></div></div>
-                <div class="col"><div class="form-group"><label>📅 Data:</label><input type="text" id="dataPedido" readonly></div></div>
-            </div>
-        </div>
-
-        <div class="card no-print">
-            <h2>🔢 Configurar Conversões</h2>
-            <div class="quantidade-config">
-                <div class="row">
-                    <div class="col"><div class="form-group"><label>Quantas conversões deseja realizar?</label><input type="number" id="quantidadeAnalises" min="1" max="20" value="3"></div></div>
-                    <div class="col"><div class="form-group"><label>&nbsp;</label><button onclick="gerarFormularioAnalises()" style="width:100%;">📋 Gerar Formulário</button></div></div>
-                </div>
-            </div>
-            <div id="formularioAnalises"></div>
-        </div>
-
-        <div class="card no-print">
-            <h2>🔄 Conversor Rápido</h2>
-            <div class="row">
-                <div class="col"><input type="text" id="valorRapido" placeholder="Valor" style="width:100%; padding:8px;"></div>
-                <div class="col"><select id="baseOrigemRapida" style="width:100%; padding:8px;"><option value="dec">Decimal</option><option value="bin">Binário</option><option value="oct">Octal</option><option value="hex">Hexadecimal</option></select></div>
-                <div class="col"><select id="baseDestinoRapida" style="width:100%; padding:8px;"><option value="bin">Binário</option><option value="oct">Octal</option><option value="dec">Decimal</option><option value="hex">Hexadecimal</option></select></div>
-                <div class="col"><button onclick="conversaoRapida()" style="width:100%;">Converter</button></div>
-            </div>
-            <div id="resultadoRapido" style="margin-top:10px;"></div>
-        </div>
-
-        <div class="card">
-            <h2>📊 Resultados das Conversões</h2>
-            <div class="total-pedidos" id="totalPedidos">Total de conversões: 0</div>
-            <div class="export-buttons no-print">
-                <button class="btn-success" onclick="exportarWord()">📄 Exportar para Word</button>
-                <button class="btn-info" onclick="exportarPDF()">📑 Exportar para PDF</button>
-                <button class="btn-warning" onclick="imprimir()">🖨️ Imprimir</button>
-                <button class="btn-danger" onclick="limparTodos()">🗑️ Limpar Todos</button>
-            </div>
-            <div id="listaPedidos"><p style="text-align:center; color:#999;">Nenhuma conversão realizada.</p></div>
-        </div>
-
-        <div class="print-footer" id="printFooter"><span>Documento gerado pelo Sistema de Conversão de Bases</span></div>
+        <button class="btn btn-calc" onclick="gerarExercicio()">Gerar Apresentação Gráfica</button>
     </div>
 
-    <script>
-        let pedidos = [];
-        let contadorPedido = 0;
+    <div id="resultadoHTML"></div>
+</div>
 
-        function initData() {
-            const hoje = new Date();
-            document.getElementById('dataPedido').value = hoje.toLocaleDateString('pt-PT');
-            document.getElementById('dataAtual').textContent = hoje.toLocaleDateString('pt-PT');
-        }
+<script>
+function gerarExercicio() {
+    const nome = document.getElementById('formando').value || "Formando";
+    const n = parseInt(document.getElementById('numero').value);
+    const b = parseInt(document.getElementById('base').value);
+    
+    if (isNaN(n)) return alert("Introduza um número.");
 
-        function gerarFormularioAnalises() {
-            let quantidade = parseInt(document.getElementById('quantidadeAnalises').value);
-            if (isNaN(quantidade) || quantidade < 1) { alert('Quantidade válida (mínimo 1)'); return; }
-            let html = `<h3 style="margin-bottom:12px; font-size:14px;">✏️ Preencha os dados das ${quantidade} conversões:</h3>`;
-            for (let i = 1; i <= quantidade; i++) {
-                html += `<div class="pedido-item"><h4>Conversão #${i}</h4><div class="row">
-                    <div class="col"><div class="form-group"><label>Número Decimal:</label><input type="number" id="num_${i}" placeholder="Ex: 10, 30, 135"></div></div>
-                    <div class="col"><div class="form-group"><label>Converter para:</label><select id="base_${i}"><option value="2">Binário (Base 2)</option><option value="8">Octal (Base 8)</option><option value="16">Hexadecimal (Base 16)</option></select></div></div>
-                </div></div>`;
-            }
-            html += `<div style="margin-top:15px; text-align:center;"><button class="btn-success" onclick="processarTodasAnalises()" style="padding:10px 25px;">✅ Processar Todas</button></div>`;
-            document.getElementById('formularioAnalises').innerHTML = html;
-        }
+    let dividendos = [], restos = [], quocientes = [], atual = n;
+    while (atual > 0) {
+        dividendos.push(atual);
+        let q = Math.floor(atual / b);
+        restos.push(atual % b);
+        quocientes.push(q);
+        atual = q;
+    }
+    if (n === 0) { dividendos=[0]; restos=[0]; quocientes=[0]; }
 
-        // Função para gerar HTML compatível com Word (usando tabelas, sem flexbox)
-        function gerarCalculoWord(numero, base) {
-            let n = parseInt(numero);
-            let b = parseInt(base);
-            let restos = [], quocientes = [], dividendos = [];
-            let temp = n;
-            while (temp >= b) {
-                dividendos.push(temp);
-                let q = Math.floor(temp / b);
-                restos.push(temp % b);
-                quocientes.push(q);
-                temp = q;
-            }
-            dividendos.push(temp);
-            restos.push(temp);
-            quocientes.push(0);
+    const resFinal = [...restos].reverse().map(r => r.toString(16).toUpperCase()).join('');
+    const seqLeitura = [...restos].reverse().join(' → ');
 
-            let nomeBase = b == 2 ? 'BINÁRIO' : b == 8 ? 'OCTAL' : 'HEXADECIMAL';
-            let resultadoArray = [...restos].reverse();
-            let resultadoStr = resultadoArray.map(r => { if (b === 16 && r >= 10) return ['A','B','C','D','E','F'][r-10]; return r.toString(); }).join('');
-            let ultimoResto = restos[restos.length-1];
-            let ultimoRestoHex = (b === 16 && ultimoResto >= 10) ? ['A','B','C','D','E','F'][ultimoResto-10] : ultimoResto;
-            let ultimoQuociente = quocientes[quocientes.length-1];
+    // Geração da Tabela em Grelha (3 por linha)
+    let htmlGrelha = '<table class="tabela-mestra"><tr>';
+    for (let i = 0; i < quocientes.length; i++) {
+        if (i > 0 && i % 3 === 0) htmlGrelha += '</tr><tr>';
 
-            // Tabela de Divisão
-            let tabelaHtml = '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin:10px 0;"><tr style="background:#3498db; color:white;"><th>Número</th><th>Divisor</th><th>Quociente</th><th>Resto</th></tr>';
-            for (let i = 0; i < dividendos.length; i++) {
-                let restoMostrar = restos[i];
-                if (b === 16 && restoMostrar >= 10) restoMostrar = ['A','B','C','D','E','F'][restoMostrar-10];
-                tabelaHtml += `<tr><td style="text-align:center; font-weight:bold;">${dividendos[i]}</td><td style="text-align:center;">${b}</td><td style="text-align:center; color:#2980b9;">${quocientes[i]}</td><td style="text-align:center; color:#e74c3c; font-weight:bold;">${restoMostrar}</td></tr>`;
-            }
-            tabelaHtml += '</table>';
+        htmlGrelha += `
+            <td class="bloco-td">
+                <table class="tab-divisao">
+                    <tr>
+                        <td class="dividendo">${dividendos[i]}</td>
+                        <td class="divisor-cantoneira">${b}</td>
+                    </tr>
+                    <tr>
+                        <td class="resto-vermelho">${restos[i]}</td>
+                        <td class="quociente-azul">${quocientes[i]}</td>
+                    </tr>
+                </table>
+            </td>`;
+    }
+    // Preencher células vazias se a última linha não tiver 3 elementos
+    let restante = 3 - (quocientes.length % 3);
+    if (restante < 3) {
+        for(let j=0; j<restante; j++) htmlGrelha += '<td class="bloco-td"></td>';
+    }
+    htmlGrelha += '</tr></table>';
 
-            // Cálculos de Apoio - Usando TABELA para garantir 3 colunas no Word
-            let apoioHtml = '<p style="font-size:14px; color:#d35400; font-weight:bold; margin:15px 0 10px 0;">📐 Cálculos de Apoio:</p>';
-            apoioHtml += '<table border="0" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">';
-            
-            // Organizar em linhas de 3 colunas
-            for (let i = 0; i < dividendos.length; i += 3) {
-                apoioHtml += '<tr>';
-                for (let j = 0; j < 3; j++) {
-                    let idx = i + j;
-                    if (idx < dividendos.length) {
-                        let quoc = quocientes[idx];
-                        let mult = quoc * b;
-                        let restoValor = dividendos[idx] - mult;
-                        let restoHex = (b === 16 && restoValor >= 10) ? ['A','B','C','D','E','F'][restoValor-10] : restoValor;
-                        apoioHtml += `
-                            <td style="width:33%; vertical-align:top; border:1px solid #e0d5c1; background:#fdfaf4; border-radius:8px;">
-                                <div style="padding:10px;">
-                                    <div style="font-size:11px; color:#888; border-bottom:1px dashed #ccc; margin-bottom:8px; padding-bottom:4px;">Passo ${idx+1}</div>
-                                    <div style="font-family:'Courier New', monospace; font-size:13px; margin:8px 0; font-weight:bold; color:#2c3e50;">${dividendos[idx]} ÷ ${b} = ${quoc}</div>
-                                    <div style="font-family:'Courier New', monospace; font-size:13px; margin:8px 0; color:#d35400;">${quoc} × ${b} = ${mult}</div>
-                                    <div style="font-family:'Courier New', monospace; font-size:13px; margin:8px 0; font-weight:bold; color:#e74c3c;">${dividendos[idx]} - ${mult} = ${restoHex}</div>
-                                </div>
-                            </td>
-                        `;
-                    } else {
-                        apoioHtml += '<td style="width:33%;"></td>';
-                    }
-                }
-                apoioHtml += '</tr>';
-            }
-            apoioHtml += '</table>';
+    document.getElementById('resultadoHTML').innerHTML = `
+        <div class="relatorio-final" id="areaPrint">
+            <div style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="font-size: 1.5rem;">Relatório de Avaliação: Conversão de Sistemas Numéricos</h1>
+                <p><strong>Nome do Formando:</strong> ${nome}</p>
+                <p><strong>Tarefa:</strong> Converter (${n})₁₀ para a base ${b}</p>
+            </div>
 
-            // Leitura
-            let restosReverso = [...restos].reverse();
-            let restosTexto = restosReverso.map(r => { if (b === 16 && r >= 10) return ['A','B','C','D','E','F'][r-10]; return r; }).join(' → ');
-            let leituraHtml = `<div style="background:#e8f8e8; padding:12px; border-radius:8px; margin:15px 0; text-align:center; border-left:4px solid #27ae60;">
-                <div>📖 <strong style="color:#e74c3c;">Último resto = ${ultimoRestoHex}</strong> e <strong style="color:#2980b9;">Último quociente = ${ultimoQuociente}</strong></div>
-                <div style="margin-top:5px;">Ler de baixo ↑: <strong>${restosTexto}</strong></div>
-            </div>`;
+            ${htmlGrelha}
 
-            return `
-                <div style="border:1px solid #ddd; padding:20px; margin-bottom:25px; border-radius:10px;">
-                    <h3 style="color:#2c3e50; border-bottom:2px solid #3498db; padding-bottom:8px; margin-bottom:20px;">${numero}₁₀ → ${nomeBase} (Base ${b})</h3>
-                    ${tabelaHtml}
-                    ${apoioHtml}
-                    ${leituraHtml}
-                    <div style="background:#e8f4fd; padding:12px; border-radius:8px; text-align:center; font-weight:bold; margin-top:15px; border:1px solid #3498db;">
-                        ✅ (${numero})₁₀ = (${resultadoStr})<sub>${b}</sub>
-                    </div>
-                </div>
-            `;
-        }
+            <div class="leitura-viva">
+                📖 Último resto = ${restos[restos.length-1]} <br>
+                Ler de baixo para cima ↑: ${seqLeitura}
+            </div>
 
-        // Função para visualização normal (navegador)
-        function gerarCalculoNormal(numero, base) {
-            let n = parseInt(numero);
-            let b = parseInt(base);
-            let restos = [], quocientes = [], dividendos = [];
-            let temp = n;
-            while (temp >= b) {
-                dividendos.push(temp);
-                let q = Math.floor(temp / b);
-                restos.push(temp % b);
-                quocientes.push(q);
-                temp = q;
-            }
-            dividendos.push(temp);
-            restos.push(temp);
-            quocientes.push(0);
+            <div class="badge-resultado">
+                (${n})₁₀ = (${resFinal})<sub>${b}</sub>
+            </div>
 
-            let nomeBase = b == 2 ? 'BINÁRIO' : b == 8 ? 'OCTAL' : 'HEXADECIMAL';
-            let resultadoArray = [...restos].reverse();
-            let resultadoStr = resultadoArray.map(r => { if (b === 16 && r >= 10) return ['A','B','C','D','E','F'][r-10]; return r.toString(); }).join('');
-            let ultimoResto = restos[restos.length-1];
-            let ultimoRestoHex = (b === 16 && ultimoResto >= 10) ? ['A','B','C','D','E','F'][ultimoResto-10] : ultimoResto;
-            let ultimoQuociente = quocientes[quocientes.length-1];
+            <div class="no-print" style="margin-top:30px; text-align:right;">
+                <button class="btn btn-word" onclick="exportWord()">Exportar Word</button>
+                <button class="btn btn-pdf" onclick="exportPDF()">Gerar PDF</button>
+                <button class="btn" style="background:#7f8c8d" onclick="window.print()">Imprimir</button>
+            </div>
+        </div>
+    `;
+}
 
-            let tabelaHtml = `<table class="tabela-divisao"><tr><th>Número</th><th>Divisor</th><th>Quociente</th><th>Resto</th></tr>`;
-            for (let i = 0; i < dividendos.length; i++) {
-                let restoMostrar = restos[i];
-                if (b === 16 && restoMostrar >= 10) restoMostrar = ['A','B','C','D','E','F'][restoMostrar-10];
-                tabelaHtml += `<tr><td class="numero-col"><strong>${dividendos[i]}</strong></td><td>${b}</td><td class="quociente-col">${quocientes[i]}</td><td class="resto-col">${restoMostrar}</td></tr>`;
-            }
-            tabelaHtml += `</table>`;
+function exportPDF() {
+    const el = document.getElementById('areaPrint');
+    html2pdf().set({ margin: 0.5, filename: 'Conversao_Base.pdf', html2canvas: { scale: 2 } }).from(el).save();
+}
 
-            let apoioHtml = `<div class="apoio-titulo">📐 Cálculos de Apoio:</div><div class="apoio-container">`;
-            for (let i = 0; i < dividendos.length; i++) {
-                let quoc = quocientes[i];
-                let mult = quoc * b;
-                let restoValor = dividendos[i] - mult;
-                let restoHex = (b === 16 && restoValor >= 10) ? ['A','B','C','D','E','F'][restoValor-10] : restoValor;
-                apoioHtml += `<div class="passo-apoio"><div class="passo-numero">Passo ${i+1}</div><div class="conta divisao-conta">${dividendos[i]} ÷ ${b} = ${quoc}</div><div class="conta multiplicacao-conta">${quoc} × ${b} = ${mult}</div><div class="conta subtracao-conta">${dividendos[i]} - ${mult} = ${restoHex}</div></div>`;
-            }
-            apoioHtml += `</div>`;
+function exportWord() {
+    const html = document.getElementById('areaPrint').innerHTML;
+    const blob = new Blob(['\ufeff', `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+        <head><meta charset='utf-8'><style>
+            table { border-collapse: collapse; width: 100%; }
+            .bloco-td { width: 33%; padding: 10pt; vertical-align: top; }
+            .divisor-cantoneira { border-left: 2pt solid black; border-bottom: 2pt solid black; padding: 5pt; text-align: center; font-weight: bold; }
+            .dividendo { font-weight: bold; text-align: center; font-size: 14pt; }
+            .resto-vermelho { color: red; font-weight: bold; text-align: center; font-size: 14pt; }
+            .quociente-azul { color: blue; text-align: center; font-size: 12pt; }
+            .badge-resultado { background: #2c3e50; color: white; padding: 10pt; text-align: center; font-weight: bold; }
+        </style></head><body>${html}</body></html>
+    `], { type: 'application/msword' });
+    saveAs(blob, 'Exercicio_Conversao.doc');
+}
+</script>
 
-            let restosReverso = [...restos].reverse();
-            let restosTexto = restosReverso.map(r => { if (b === 16 && r >= 10) return ['A','B','C','D','E','F'][r-10]; return r; }).join(' → ');
-            let leituraHtml = `<div class="leitura-box"><div>📖 <strong style="color:#e74c3c;">Último resto = ${ultimoRestoHex}</strong> </div><div style="margin-top:5px;">Ler de baixo ↑: <strong>${restosTexto}</strong></div></div>`;
-
-            return `<div class="resultado-bloco"><h3>${numero}₁₀ → ${nomeBase} (Base ${b})</h3>${tabelaHtml}${apoioHtml}${leituraHtml}<div class="resultado-final-box">✅ (${numero})₁₀ = (${resultadoStr})<sub>${b}</sub></div></div>`;
-        }
-
-        function processarTodasAnalises() {
-            let quantidade = parseInt(document.getElementById('quantidadeAnalises').value);
-            let novosPedidos = [], erros = [];
-            for (let i = 1; i <= quantidade; i++) {
-                let numero = parseInt(document.getElementById(`num_${i}`).value);
-                let baseDestino = document.getElementById(`base_${i}`).value;
-                if (isNaN(numero) || numero <= 0) { erros.push(`Conversão #${i}: Número inválido`); continue; }
-                contadorPedido++;
-                novosPedidos.push({ id: contadorPedido, numero: numero, base: baseDestino, html: gerarCalculoNormal(numero, baseDestino) });
-            }
-            if (erros.length > 0) alert('Erros:\n' + erros.join('\n'));
-            if (novosPedidos.length > 0) { pedidos = [...pedidos, ...novosPedidos]; atualizarLista(); alert(`${novosPedidos.length} conversão(ões) adicionada(s)!`); document.getElementById('formularioAnalises').innerHTML = ''; }
-            else alert('Nenhuma conversão válida.');
-        }
-
-        function atualizarLista() {
-            const container = document.getElementById('listaPedidos');
-            const totalSpan = document.getElementById('totalPedidos');
-            if (pedidos.length === 0) { container.innerHTML = '<p style="text-align:center; color:#999;">Nenhuma conversão realizada.</p>'; totalSpan.innerHTML = 'Total de conversões: 0'; return; }
-            let html = '';
-            for (let i = 0; i < pedidos.length; i++) { html += pedidos[i].html; html += `<div style="text-align:right; margin-top:5px;" class="no-print"><button class="btn-remover" onclick="removerPedido(${pedidos[i].id})">🗑️ Remover</button></div>`; }
-            container.innerHTML = html;
-            totalSpan.innerHTML = `Total de conversões: ${pedidos.length}`;
-        }
-
-        function removerPedido(id) { pedidos = pedidos.filter(p => p.id !== id); atualizarLista(); }
-        function limparTodos() { if (confirm('Remover todas?')) { pedidos = []; atualizarLista(); } }
-
-        function conversaoRapida() {
-            let valor = document.getElementById('valorRapido').value;
-            let baseOrigem = document.getElementById('baseOrigemRapida').value;
-            let baseDestino = document.getElementById('baseDestinoRapida').value;
-            if (!valor) { document.getElementById('resultadoRapido').innerHTML = '<p style="color:red;">⚠️ Digite um valor!</p>'; return; }
-            let decimal;
-            switch (baseOrigem) { case 'bin': decimal = parseInt(valor,2); break; case 'oct': decimal = parseInt(valor,8); break; case 'hex': decimal = parseInt(valor,16); break; default: decimal = parseInt(valor,10); }
-            if (isNaN(decimal)) { document.getElementById('resultadoRapido').innerHTML = '<p style="color:red;">⚠️ Valor inválido!</p>'; return; }
-            let resultado;
-            switch (baseDestino) { case 'bin': resultado = decimal.toString(2); break; case 'oct': resultado = decimal.toString(8); break; case 'hex': resultado = decimal.toString(16).toUpperCase(); break; default: resultado = decimal; }
-            let nomes = { bin: 'Binário', oct: 'Octal', dec: 'Decimal', hex: 'Hexadecimal' };
-            document.getElementById('resultadoRapido').innerHTML = `<div style="background:#e8f4fd; padding:10px; border-radius:5px; text-align:center;">${valor} (${nomes[baseOrigem]}) = ${resultado} (${nomes[baseDestino]})</div>`;
-        }
-
-        function getConteudoParaExportar() {
-            const nome = document.getElementById('nomeAluno').value || 'Não informado';
-            const data = document.getElementById('dataPedido').value;
-            let html = `<div style="font-family:'Courier New', monospace; padding:20px;"><div style="text-align:center; margin-bottom:25px;"><h1 style="color:#2c3e50;">📊 RELATÓRIO DE CONVERSÃO DE BASES</h1><p><strong>Formando:</strong> ${nome}</p><p><strong>Data:</strong> ${data}</p><hr></div>`;
-            for (let i = 0; i < pedidos.length; i++) { html += gerarCalculoWord(pedidos[i].numero, pedidos[i].base); if (i < pedidos.length-1) html += `<div style="margin-bottom:20px;"></div>`; }
-            html += `<div style="text-align:center; margin-top:30px; padding-top:15px; border-top:1px solid #ccc; font-size:10px;"><p>Documento gerado pelo Sistema de Conversão de Bases</p></div></div>`;
-            return html;
-        }
-
-        function exportarWord() {
-            if (pedidos.length === 0) { alert('Não há conversões para exportar!'); return; }
-            const nome = document.getElementById('nomeAluno').value || 'relatorio';
-            const conteudo = getConteudoParaExportar();
-            const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Conversoes</title></head><body>${conteudo}</body></html>`], { type: 'application/msword' });
-            saveAs(blob, `conversoes_${nome.replace(/ /g, '_')}.doc`);
-        }
-
-        function exportarPDF() {
-            if (pedidos.length === 0) { alert('Não há conversões para exportar!'); return; }
-            const element = document.createElement('div');
-            element.innerHTML = getConteudoParaExportar();
-            html2pdf().set({ margin: 0.5, filename: `conversoes.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(element).save();
-        }
-
-        function imprimir() {
-            if (pedidos.length === 0) { alert('Não há conversões para imprimir!'); return; }
-            const janela = window.open('', '_blank');
-            janela.document.write(`<html><head><title>Imprimir</title></head><body>${getConteudoParaExportar()}<script>window.onload=function(){window.print();window.close();};<\/script></body></html>`);
-            janela.document.close();
-        }
-
-        document.getElementById('nomeAluno').addEventListener('input', function() { document.getElementById('headerNome').innerHTML = `<strong>Formando:</strong> ${this.value || 'Não informado'}`; });
-        initData();
-        document.getElementById('headerNome').innerHTML = '<strong>Formando:</strong> Não informado';
-        gerarFormularioAnalises();
-    </script>
 </body>
 </html>
