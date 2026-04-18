@@ -2,163 +2,182 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Conversor de Bases - Relatório de Formação</title>
+    <title>Sistema de Conversão de Bases - Múltiplos Cálculos</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .card-input { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .row { display: flex; gap: 15px; margin-bottom: 15px; }
-        input, select { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
         
-        /* Estilos da Grelha de Divisões */
-        .tabela-mestra { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
-        .bloco-td { width: 33.33%; padding: 15px; vertical-align: top; border: 1px solid #f0f0f0; }
+        /* Painel de Configuração */
+        .card-config { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .setup-row { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
         
-        /* O Desenho da Divisão */
-        .tab-divisao { border-collapse: collapse; margin: 0 auto; }
-        .dividendo { font-size: 1.6rem; font-weight: bold; padding: 5px 15px; text-align: center; }
-        .divisor-cantoneira { 
-            border-left: 3px solid black; 
-            border-bottom: 3px solid black; 
-            font-size: 1.6rem; 
-            font-weight: bold; 
-            padding: 5px 20px; 
-            text-align: center;
-        }
-        .resto-vermelho { font-size: 1.6rem; color: #e74c3c; font-weight: bold; text-align: center; padding-top: 5px; }
-        .quociente-azul { font-size: 1.4rem; color: #2980b9; font-weight: bold; text-align: center; padding-top: 5px; }
+        .input-group { margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
 
-        .relatorio-final { background: white; padding: 40px; border-radius: 10px; min-height: 600px; }
-        .leitura-viva { background: #eef9f1; border-left: 5px solid #27ae60; padding: 15px; margin: 20px 0; font-family: monospace; font-size: 1.1rem; }
-        .badge-resultado { background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; border-radius: 8px; }
-
-        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; margin-right: 10px; }
-        .btn-calc { background: #27ae60; width: 100%; margin-bottom: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-setup { background: #3498db; }
+        .btn-calc { background: #27ae60; width: 100%; margin-top: 10px; font-size: 1.1rem; }
         .btn-word { background: #2b5797; }
         .btn-pdf { background: #e67e22; }
+
+        /* --- ESTILO DA GRELHA TÉCNICA (3 POR LINHA) --- */
+        .tabela-mestra { width: 100%; border-collapse: collapse; margin: 20px 0; table-layout: fixed; }
+        .bloco-td { width: 33.33%; padding: 10px; vertical-align: top; border: 1px solid #f0f0f0; }
         
+        .tab-divisao { border-collapse: collapse; margin: 0 auto; }
+        .dividendo { font-size: 1.5rem; font-weight: bold; padding: 5px 10px; text-align: center; }
+        .divisor-cantoneira { border-left: 3px solid #000; border-bottom: 3px solid #000; font-size: 1.5rem; font-weight: bold; padding: 5px 15px; text-align: center; }
+        .resto-vermelho { font-size: 1.5rem; color: #e74c3c; font-weight: bold; text-align: center; padding-top: 5px; }
+        .quociente-azul { font-size: 1.3rem; color: #2980b9; font-weight: bold; text-align: center; padding-top: 5px; }
+
+        .relatorio-content { background: white; padding: 40px; border-radius: 12px; margin-top: 20px; }
+        .sessao-calculo { margin-bottom: 50px; border-bottom: 2px dashed #ccc; padding-bottom: 30px; }
+        .leitura-viva { background: #eef9f1; border-left: 5px solid #27ae60; padding: 15px; margin: 15px 0; font-family: monospace; }
+        .badge-final { background: #2c3e50; color: white; padding: 15px; text-align: center; font-size: 1.4rem; font-weight: bold; border-radius: 6px; }
+
         @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card-input no-print">
-        <h2 style="margin-bottom:15px">Configuração do Exercício</h2>
-        <div class="row">
-            <input type="text" id="formando" placeholder="Nome do Formando">
-            <input type="number" id="numero" placeholder="Valor Decimal">
-            <select id="base">
-                <option value="2">Binário (2)</option>
-                <option value="8">Octal (8)</option>
-                <option value="16">Hexadecimal (16)</option>
-            </select>
+    <div class="card-config no-print">
+        <h2 style="margin-bottom:15px">⚙️ Configurar Exercícios</h2>
+        <div class="setup-row">
+            <div style="flex: 2;">
+                <label>Nome do Formando:</label>
+                <input type="text" id="nomeInput" placeholder="Ex: João Silva">
+            </div>
+            <div style="flex: 1;">
+                <label>Quantos cálculos?</label>
+                <input type="number" id="qtdCalculos" value="1" min="1" max="10">
+            </div>
+            <button class="btn btn-setup" onclick="gerarCampos()">Criar Campos</button>
         </div>
-        <button class="btn btn-calc" onclick="gerarExercicio()">Gerar Apresentação Gráfica</button>
+
+        <div id="camposEntrada"></div>
+        <button id="btnProcessar" class="btn btn-calc" style="display:none;" onclick="processarCalculos()">Gerar Relatório Completo</button>
     </div>
 
-    <div id="resultadoHTML"></div>
+    <div id="resultadoFinal"></div>
 </div>
 
 <script>
-function gerarExercicio() {
-    const nome = document.getElementById('formando').value || "Formando";
-    const n = parseInt(document.getElementById('numero').value);
-    const b = parseInt(document.getElementById('base').value);
-    
-    if (isNaN(n)) return alert("Introduza um número.");
-
-    let dividendos = [], restos = [], quocientes = [], atual = n;
-    while (atual > 0) {
-        dividendos.push(atual);
-        let q = Math.floor(atual / b);
-        restos.push(atual % b);
-        quocientes.push(q);
-        atual = q;
+    // Gera os campos de input dinamicamente
+    function gerarCampos() {
+        const qtd = document.getElementById('qtdCalculos').value;
+        const container = document.getElementById('camposEntrada');
+        container.innerHTML = "";
+        
+        for (let i = 1; i <= qtd; i++) {
+            container.innerHTML += `
+                <div class="input-group">
+                    <div><label>Nº Decimal ${i}:</label><input type="number" class="val-dec" placeholder="Ex: 100"></div>
+                    <div><label>Base Destino:</label>
+                        <select class="val-base">
+                            <option value="2">Binário (2)</option>
+                            <option value="8">Octal (8)</option>
+                            <option value="16">Hexadecimal (16)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:flex-end; color:#999; font-size:0.8rem;">Cálculo #${i}</div>
+                </div>
+            `;
+        }
+        document.getElementById('btnProcessar').style.display = "block";
     }
-    if (n === 0) { dividendos=[0]; restos=[0]; quocientes=[0]; }
 
-    const resFinal = [...restos].reverse().map(r => r.toString(16).toUpperCase()).join('');
-    const seqLeitura = [...restos].reverse().join(' → ');
+    // Processa todos os cálculos e monta a grelha
+    function processarCalculos() {
+        const nome = document.getElementById('nomeInput').value || "Formando";
+        const valsDec = document.querySelectorAll('.val-dec');
+        const valsBase = document.querySelectorAll('.val-base');
+        let htmlFinal = `<div class="relatorio-content" id="areaPrint">
+            <div style="border-bottom: 3px solid #2c3e50; padding-bottom:10px; margin-bottom:30px;">
+                <h1>Relatório de Conversão de Bases Numéricas</h1>
+                <p><strong>Formando:</strong> ${nome} | <strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>`;
 
-    // Geração da Tabela em Grelha (3 por linha)
-    let htmlGrelha = '<table class="tabela-mestra"><tr>';
-    for (let i = 0; i < quocientes.length; i++) {
-        if (i > 0 && i % 3 === 0) htmlGrelha += '</tr><tr>';
+        valsDec.forEach((input, index) => {
+            const n = parseInt(input.value);
+            const b = parseInt(valsBase[index].value);
+            if (isNaN(n)) return;
 
-        htmlGrelha += `
-            <td class="bloco-td">
-                <table class="tab-divisao">
-                    <tr>
-                        <td class="dividendo">${dividendos[i]}</td>
-                        <td class="divisor-cantoneira">${b}</td>
-                    </tr>
-                    <tr>
-                        <td class="resto-vermelho">${restos[i]}</td>
-                        <td class="quociente-azul">${quocientes[i]}</td>
-                    </tr>
-                </table>
-            </td>`;
-    }
-    // Preencher células vazias se a última linha não tiver 3 elementos
-    let restante = 3 - (quocientes.length % 3);
-    if (restante < 3) {
-        for(let j=0; j<restante; j++) htmlGrelha += '<td class="bloco-td"></td>';
-    }
-    htmlGrelha += '</tr></table>';
+            let dividendos = [], restos = [], quocientes = [], atual = n;
+            while (atual > 0) {
+                dividendos.push(atual);
+                let q = Math.floor(atual / b);
+                restos.push(atual % b);
+                quocientes.push(q);
+                atual = q;
+            }
+            if(n === 0) { dividendos=[0]; restos=[0]; quocientes=[0]; }
 
-    document.getElementById('resultadoHTML').innerHTML = `
-        <div class="relatorio-final" id="areaPrint">
-            <div style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom: 20px;">
-                <h1 style="font-size: 1.5rem;">Relatório de Avaliação: Conversão de Sistemas Numéricos</h1>
-                <p><strong>Nome do Formando:</strong> ${nome}</p>
-                <p><strong>Tarefa:</strong> Converter (${n})₁₀ para a base ${b}</p>
-            </div>
+            const resFinal = [...restos].reverse().map(r => r.toString(16).toUpperCase()).join('');
+            const seqLeitura = [...restos].reverse().join(' → ');
 
-            ${htmlGrelha}
+            // Montar Grelha de Divisões (3 por linha)
+            let htmlGrelha = '<table class="tabela-mestra"><tr>';
+            for (let i = 0; i < quocientes.length; i++) {
+                if (i > 0 && i % 3 === 0) htmlGrelha += '</tr><tr>';
+                htmlGrelha += `
+                    <td class="bloco-td">
+                        <table class="tab-divisao">
+                            <tr><td class="dividendo">${dividendos[i]}</td><td class="divisor-cantoneira">${b}</td></tr>
+                            <tr><td class="resto-vermelho">${restos[i]}</td><td class="quociente-azul">${quocientes[i]}</td></tr>
+                        </table>
+                    </td>`;
+            }
+            // Completa a linha da tabela se necessário
+            let sobra = 3 - (quocientes.length % 3);
+            if (sobra < 3) for(let s=0; s<sobra; s++) htmlGrelha += '<td class="bloco-td"></td>';
+            htmlGrelha += '</tr></table>';
 
-            <div class="leitura-viva">
-                📖 Último resto = ${restos[restos.length-1]} <br>
-                Ler de baixo para cima ↑: ${seqLeitura}
-            </div>
+            htmlFinal += `
+                <div class="sessao-calculo">
+                    <h3>Cálculo ${index + 1}: Converter ${n}₁₀ para base ${b}</h3>
+                    ${htmlGrelha}
+                    <div class="leitura-viva">📖 Último resto = ${restos[restos.length-1]}| Ler de baixo para cima ↑: ${seqLeitura}</div>
+                    <div class="badge-final">Resultado: (${resFinal})<sub>${b}</sub></div>
+                </div>`;
+        });
 
-            <div class="badge-resultado">
-                (${n})₁₀ = (${resFinal})<sub>${b}</sub>
-            </div>
-
-            <div class="no-print" style="margin-top:30px; text-align:right;">
+        htmlFinal += `
+            <div class="no-print" style="text-align:center; margin-top:30px;">
                 <button class="btn btn-word" onclick="exportWord()">Exportar Word</button>
                 <button class="btn btn-pdf" onclick="exportPDF()">Gerar PDF</button>
                 <button class="btn" style="background:#7f8c8d" onclick="window.print()">Imprimir</button>
             </div>
-        </div>
-    `;
-}
+        </div>`;
 
-function exportPDF() {
-    const el = document.getElementById('areaPrint');
-    html2pdf().set({ margin: 0.5, filename: 'Conversao_Base.pdf', html2canvas: { scale: 2 } }).from(el).save();
-}
+        document.getElementById('resultadoFinal').innerHTML = htmlFinal;
+    }
 
-function exportWord() {
-    const html = document.getElementById('areaPrint').innerHTML;
-    const blob = new Blob(['\ufeff', `
-        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
-        <head><meta charset='utf-8'><style>
-            table { border-collapse: collapse; width: 100%; }
-            .bloco-td { width: 33%; padding: 10pt; vertical-align: top; }
-            .divisor-cantoneira { border-left: 2pt solid black; border-bottom: 2pt solid black; padding: 5pt; text-align: center; font-weight: bold; }
-            .dividendo { font-weight: bold; text-align: center; font-size: 14pt; }
-            .resto-vermelho { color: red; font-weight: bold; text-align: center; font-size: 14pt; }
-            .quociente-azul { color: blue; text-align: center; font-size: 12pt; }
-            .badge-resultado { background: #2c3e50; color: white; padding: 10pt; text-align: center; font-weight: bold; }
-        </style></head><body>${html}</body></html>
-    `], { type: 'application/msword' });
-    saveAs(blob, 'Exercicio_Conversao.doc');
-}
+    function exportPDF() {
+        const el = document.getElementById('areaPrint');
+        html2pdf().set({ margin: 0.5, filename: 'Relatorio_Conversao.pdf', html2canvas: { scale: 2 } }).from(el).save();
+    }
+
+    function exportWord() {
+        const html = document.getElementById('areaPrint').innerHTML;
+        const blob = new Blob(['\ufeff', `
+            <html><head><meta charset='utf-8'><style>
+                table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }
+                .bloco-td { width: 33%; padding: 10pt; vertical-align: top; border: 0.5pt solid #eee; }
+                .divisor-cantoneira { border-left: 2pt solid black; border-bottom: 2pt solid black; padding: 5pt; text-align: center; font-weight: bold; }
+                .dividendo { font-weight: bold; text-align: center; font-size: 14pt; }
+                .resto-vermelho { color: red; font-weight: bold; text-align: center; font-size: 14pt; }
+                .quociente-azul { color: blue; text-align: center; font-size: 12pt; }
+                .badge-final { background: #2c3e50; color: white; padding: 10pt; text-align: center; font-weight: bold; }
+            </style></head><body>${html}</body></html>
+        `], { type: 'application/msword' });
+        saveAs(blob, 'Relatorio_Conversao.doc');
+    }
 </script>
 
 </body>
